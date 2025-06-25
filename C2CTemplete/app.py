@@ -10,7 +10,7 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-openai.api_key = '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'
+openai.api_key = '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'  # Use environment variable for safety
 app.secret_key = 'supersecretkey'
 
 
@@ -23,52 +23,26 @@ def home():
 # Chat route - handles the conversation with the LLM
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json['message']
-    animal_type = request.json['animalType']
+    user_message = request.json.get('message', '')
 
     if 'conversation' not in session:
         session['conversation'] = []
 
-    # Append the user's message to the conversation
     session['conversation'].append({"role": "user", "content": user_message})
 
-    # Read the initial prompt from the file
-    text_file_path = 'topic_prompts/initial_prompt.txt'
-    if not os.path.exists(text_file_path):
-        return jsonify({'response': 'Initial prompt file not found.'})
-
-    with open(text_file_path, 'r') as file:
-        initial_prompt = file.read()
-
-    # Construct the system message
-    system_message = f"The user is showing a picture of a {animal_type}. Respond accordingly"
-
-    # The messages structure for the API call
-    messages = [{
-        "role": "system",
-        "content": initial_prompt
-    }, {
-        "role": "system",
-        "content": system_message
-    }] + session['conversation']
+    # System prompt for the chatbot
+    system_message = {"role": "system", "content": "You are a helpful assistant."}
+    messages = [system_message] + session['conversation']
 
     try:
-        # Make API call to OpenAI using the messages
-        response = openai.chat.completions.create(model="gpt-3.5-turbo-1106",
-                                                  messages=messages)
-        # Extract the content from the response
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages
+        )
         gpt_response = response.choices[0].message.content
-
-        # Append the GPT response to the conversation history
-        session['conversation'].append({
-            "role": "assistant",
-            "content": gpt_response
-        })
-
-        # Return the GPT response
+        session['conversation'].append({"role": "assistant", "content": gpt_response})
         return jsonify({'response': gpt_response})
     except Exception as e:
-        # Log the error and return a message
         app.logger.error(f"An error occurred: {e}")
         return jsonify({'error': str(e)}), 500
 
@@ -82,4 +56,4 @@ def clear_session():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080)
+    app.run(debug=True)
