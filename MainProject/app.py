@@ -14,6 +14,10 @@ Session(app)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app.secret_key = 'supersecretkey'
 
+@app.route('/chatbot')
+def chatbot():
+    return render_template('index.html')
+
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json.get('message', '')

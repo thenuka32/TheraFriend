@@ -17,7 +17,7 @@
         }
 
         #chat {
-            width: 450px;
+            width: 1000px; /* Increased from 450px */
             max-width: 100%;
             margin: 40px auto;
             background: white;
@@ -27,7 +27,7 @@
         }
 
         .chat-header {
-            background: #4a90e2;
+            background: linear-gradient(135deg,rgb(179, 200, 255) 0%,rgb(23, 133, 222) 100%);
             color: white;
             padding: 15px 20px;
             text-align: center;
@@ -36,7 +36,9 @@
         }
 
         #messages {
-            height: 350px;
+            display: flex;
+            flex-direction: column;
+            height: 350px; /* or your preferred height */
             overflow-y: auto;
             padding: 15px;
             background: #fafafa;
@@ -56,24 +58,55 @@
         }
 
         .message {
-            margin-bottom: 12px;
-            padding: 8px 12px;
-            border-radius: 15px;
-            max-width: 80%;
+            margin-bottom: 48px; /* Increased space between messages */
+            padding: 32px 48px;
+            border-radius: 40px;
+            max-width: 95%;
             word-wrap: break-word;
+            position: relative;
+            font-size: 28px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+            display: block;
         }
 
         .user {
-            background: #4a90e2;
-            color: white;
-            margin-left: auto;
+            background: linear-gradient(135deg, #b3c8ff 0%, #1785de 100%);
+            color: #fff;
+            align-self: flex-end;
             text-align: right;
+            border-radius: 25px; /* Fully rounded */
+        }
+
+        .user::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-top: 10px solid #1785de;
+            border-left: 10px solid transparent;
+            border-radius: 2px;
         }
 
         .bot {
             background: #e8e8e8;
             color: #333;
-            margin-right: auto;
+            align-self: flex-start;
+            text-align: left;
+            border-radius: 25px; /* Fully rounded */
+        }
+
+        .bot::after {
+            content: "";
+            position: absolute;
+            left: -10px;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-top: 10px solid #e8e8e8;
+            border-right: 10px solid transparent;
+            border-radius: 2px;
         }
 
         .input-container {
@@ -111,7 +144,7 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
-            transition: background-color 0.3s;
+            transition: background-color 0.5s;
         }
 
         .send-button:hover {
