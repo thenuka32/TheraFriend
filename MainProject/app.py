@@ -3,15 +3,21 @@ from flask_session import Session
 from dotenv import load_dotenv
 import os, openai
 
-load_dotenv()                                 
-app = Flask(__name__, template_folder='.')    
+# Load environment variables from .env
+load_dotenv()
+
+app = Flask(__name__, template_folder='templates')  # templates folder
 app.config.update(
     SESSION_PERMANENT=False,
     SESSION_TYPE="filesystem",
 )
 Session(app)
+app.secret_key = 'supersecretkey'
 
-openai.api_key = os.getenv("OPENAI_API_KEY")  
+# Initialize OpenAI client (new SDK style)
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Load system prompt from file
 script_dir = os.path.dirname(os.path.abspath(__file__))
 prompt_path = os.path.join(script_dir, 'topic_prompts', 'initial_prompt.txt')
 with open(prompt_path, 'r', encoding='utf-8') as f:
@@ -29,7 +35,7 @@ def chat():
     history.append({"role": "user", "content": user_msg})
 
     try:
-        resp = openai.ChatCompletion.create(
+        resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history
         )
@@ -46,7 +52,7 @@ def chat():
 def add_task():
     task = request.json.get('task', '').strip()
     if not task:
-        return jsonify({'error': 'No task'}), 400
+        return jsonify({'error': 'No task provided'}), 400
     tasks = session.get('tasks', [])
     tasks.append(task)
     session['tasks'] = tasks
@@ -62,5 +68,4 @@ def clear_tasks():
     return jsonify({'status': 'cleared'})
 
 if __name__ == "__main__":
-    app.secret_key = 'supersecretkey'
     app.run(debug=True)

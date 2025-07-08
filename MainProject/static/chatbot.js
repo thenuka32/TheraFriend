@@ -1,4 +1,3 @@
-
 function appendMessage(sender, text) {
     const messages = document.getElementById('messages');
     const div = document.createElement('div');
@@ -10,7 +9,7 @@ function appendMessage(sender, text) {
 
 function showList() {
     fetch('/tasks')
-        .then(r => r.json())
+        .then(res => res.json())
         .then(list => {
             const reply = list.length
                 ? "Here’s what you’ve asked me to track:\n• " + list.join("\n• ")
@@ -59,11 +58,11 @@ function sendMessage() {
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({ message: text })
     })
-    .then(r => r.json())
-    .then(d => appendMessage('bot', d.response || d.error))
-    .catch(e => {
-        console.error(e);
-        appendMessage('bot', 'Sorry — something went wrong on my side.');
+    .then(res => res.json())
+    .then(data => appendMessage('bot', data.response || data.error))
+    .catch(err => {
+        console.error(err);
+        appendMessage('bot', 'Sorry — something went wrong on my side.');
     });
 }
 

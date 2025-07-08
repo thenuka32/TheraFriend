@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TheraFriend AI Chat</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='chatBotpage.css') }}" />
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header"><h2>TheraFriend AI</h2></div>
+
+    <div class="chat-messages" id="messages">
+      <div class="bot">Bot: Hello! I’m here to listen. How are you feeling?</div>
+    </div>
+
+    <div class="chat-input-container">
+      <input id="messageInput" class="chat-input" type="text" placeholder="Type your message here…" />
+      <button id="sendButton" class="send-button">Send</button>
+    </div>
+
+    <div class="chat-input-container" style="gap:10px; justify-content:flex-start;">
+      <button class="send-button" onclick="showList()">Show My List</button>
+      <button class="send-button" onclick="clearList()">Clear My Goals</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+</body>
+</html>
