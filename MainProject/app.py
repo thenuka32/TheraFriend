@@ -3,6 +3,7 @@ from flask_session import Session
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
+import io
 load_dotenv()
 
 app = Flask(__name__)
@@ -49,7 +50,7 @@ def chat():
         return jsonify({'response': gpt_response})
     except Exception as e:
         app.logger.error(f"An error occurred: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/')
 def home():
@@ -57,3 +58,29 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+@app.route("/transcribe", methods=["POST"])
+def transcribe():
+    try:
+        # Check if file exists
+        if "audio" not in request.files:
+            return jsonify({"error": "No audio file provided"}), 400
+        
+        file = request.files["audio"]
+        
+        # Read file into buffer
+        buffer = io.BytesIO(file.read())
+        buffer.name = "audio.webm"  # OpenAI needs a filename
+        
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=buffer,
+        )
+        
+        # The transcript object has a 'text' attribute
+        return jsonify({"transcript": transcript.text})
+    
+    except KeyError:
+        return jsonify({"error": "Audio file missing"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
