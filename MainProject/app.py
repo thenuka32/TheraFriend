@@ -3,7 +3,6 @@ from flask_session import Session
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
-import io
 load_dotenv()
 
 app = Flask(__name__)
@@ -12,51 +11,39 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-app.secret_key = 'supersecretkey'
+openai.api_key = os.getenv("OPENAI_API_KEY")  
+script_dir = os.path.dirname(os.path.abspath(__file__))
+prompt_path = os.path.join(script_dir, 'topic_prompts', 'initial_prompt.txt')
+with open(prompt_path, 'r', encoding='utf-8') as f:
+    SYSTEM_PROMPT = f.read().strip()
 
-@app.route('/chatbot')
-def chatbot():
-    return render_template('index.html')
+@app.route('/')
+def chatbot_page():
+    return render_template('chatBotpage.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get('message', '')
+    user_msg = request.json.get('message', '')
 
-    if 'conversation' not in session:
-        session['conversation'] = []
-
-    session['conversation'].append({"role": "user", "content": user_message})
-
-    # Read initial prompt from file
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    text_file_path = os.path.join(script_dir, 'topic_prompts', 'initial_prompt.txt')
-    if not os.path.exists(text_file_path):
-        return jsonify({'response': 'Initial prompt file not found.'})
-
-    with open(text_file_path, 'r') as file:
-        initial_prompt = file.read()
-
-    system_message = {"role": "system", "content": initial_prompt}
-    messages = [system_message] + session['conversation']
+    history = session.get('conversation', [])
+    history.append({"role": "user", "content": user_msg})
 
     try:
-        response = client.chat.completions.create(
+        resp = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=messages
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history
         )
-        gpt_response = response.choices[0].message.content
-        session['conversation'].append({"role": "assistant", "content": gpt_response})
-        return jsonify({'response': gpt_response})
+        reply = resp.choices[0].message.content.strip()
     except Exception as e:
         app.logger.error(f"An error occurred: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
 if __name__ == "__main__":
+    app.secret_key = 'supersecretkey'
     app.run(debug=True)
 
 @app.route("/transcribe", methods=["POST"])

@@ -1,28 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Layout</title>
-    <link rel="stylesheet" href="indextest.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TheraFriend AI Chat</title>
+  <link rel="stylesheet" href="chatBotpage.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">TheraFriend</div>
-            </div>
-        </div>
-    </header>
 
-    <main>
-        <div class="container">
-            <section class="hero">
-                <h1>Welcome to TheraFriend</h1>
-                <p>Get amazing mental health services tailored just for you with the power of AI</p>
-                <a href="#" class="btn">Get Started</a>
-            </section>
-        </div>
-    </main>
+  <div class="chat-container">
+    <div class="chat-header"><h2>TheraFriend AI</h2></div>
+
+    <!-- Chat log -->
+    <div class="chat-messages" id="messages">
+      <div class="bot">Bot: Hello! I’m here to listen. How are you feeling?</div>
+    </div>
+
+    <!-- Text input -->
+    <div class="chat-input-container">
+      <input id="messageInput" class="chat-input" type="text" placeholder="Type your message here…">
+      <button id="sendButton" class="send-button">Send</button>
+    </div>
+
+    <!-- Quick‑action buttons -->
+    <div class="chat-input-container" style="gap:10px;justify-content:flex-start">
+      <button class="send-button" onclick="showList()">Show My List</button>
+      <button class="send-button" onclick="clearList()">Clear My Goals</button>
+    </div>
+  </div>
+
+  <script src="chatbot.js"></script>
 </body>
 </html>
