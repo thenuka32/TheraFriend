@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from flask_session import Session
 from dotenv import load_dotenv
 import os
@@ -59,7 +59,24 @@ def transcribe():
         return jsonify({"error": "Audio file missing"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@app.route('/tasks', methods=['POST'])
+def add_task():
+    task = request.json.get('task', '').strip()
+    if not task:
+        return jsonify({'error': 'No task'}), 400
+    tasks = session.get('tasks', [])
+    tasks.append(task)
+    session['tasks'] = tasks
+    return jsonify({'status': 'added'})
 
+@app.route('/tasks', methods=['GET'])
+def get_tasks():
+    return jsonify(session.get('tasks', []))
+
+@app.route('/tasks/clear', methods=['POST'])
+def clear_tasks():
+    session['tasks'] = []
+    return jsonify({'status': 'cleared'})
 
 if __name__ == "__main__":
     app.run(debug=True)
