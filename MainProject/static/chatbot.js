@@ -6,7 +6,6 @@ function appendMessage(sender, text) {
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
 }
-
 function showList() {
     fetch('/tasks')
         .then(res => res.json())
@@ -25,14 +24,38 @@ function clearList() {
 
 function sendMessage() {
     const input = document.getElementById('messageInput');
-    const text = input.value.trim();
+    const text  = input.value.trim();
     if (!text) return;
+
     appendMessage('user', text);
     input.value = '';
+
+    const lower = text.toLowerCase();
+
+    if (lower.includes('remind me to') || lower.includes('help me quit')) {
+        fetch('/tasks', {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({ task: text })
+        })
+        .then(() => appendMessage('bot', 'Got it! I added that to your goal list.'));
+        return;
+    }
+
+    if (lower.includes('show my list') || lower.includes('show my tasks')) {
+        showList();
+        return;
+    }
+
+    if (lower.includes('clear my goals') || lower.includes('clear my list')) {
+        clearList();
+        return;
+    }
+
     fetch('/chat', {
-        method: 'POST',
+        method : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body   : JSON.stringify({ message: text })
     })
     .then(res => res.json())
     .then(data => appendMessage('bot', data.response || data.error))
