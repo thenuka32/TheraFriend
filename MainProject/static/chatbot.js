@@ -7,6 +7,22 @@ function appendMessage(sender, text) {
     messages.scrollTop = messages.scrollHeight;
 }
 
+function showList() {
+    fetch('/tasks')
+        .then(res => res.json())
+        .then(list => {
+            const reply = list.length
+                ? "Here’s what you’ve asked me to track:\n• " + list.join("\n• ")
+                : "Your list is currently empty.";
+            appendMessage('bot', reply);
+        });
+}
+
+function clearList() {
+    fetch('/tasks/clear', { method: 'POST' })
+        .then(() => appendMessage('bot', 'I’ve cleared your list. Let’s start fresh!'));
+}
+
 function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
@@ -19,18 +35,17 @@ function sendMessage() {
         body: JSON.stringify({ message: text })
     })
     .then(res => res.json())
-    .then(data => {
-        appendMessage('bot', data.response || data.error);
-    })
+    .then(data => appendMessage('bot', data.response || data.error))
     .catch(err => {
         console.error(err);
-        appendMessage('bot', "Sorry — something went wrong on my side.");
+        appendMessage('bot', 'Sorry — something went wrong on my side.');
     });
 }
 
 document.getElementById('messageInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') sendMessage();
 });
+document.getElementById('sendButton').addEventListener('click', sendMessage);
 
 //Media Recorder API setup
 const record = document.getElementById('.record');
@@ -109,3 +124,4 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 } else {
     alert("getUserMedia is not supported in your browser");
 }
+document.getElementById('sendButton').addEventListener('click', sendMessage);
