@@ -27,7 +27,7 @@ with open(prompt_path, 'r', encoding='utf-8') as f:
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('chatBotpage.html')
 
 
 @app.route("/chat", methods=["POST"])
@@ -37,6 +37,7 @@ def chat():
 
     history = session.get('conversation', [])
     history.append({"role": "user", "content": user_msg})
+    session['conversation'] = history
     try:
         resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
