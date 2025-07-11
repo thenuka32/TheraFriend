@@ -81,3 +81,33 @@
 .send-button:hover {
   background: #0f5a9e;
 }
+
+.btn-primary {
+  padding: 12px 20px !important;
+  background: #1785de !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 25px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.btn-primary:hover {
+  background: #0f5a9e !important;
+}
+
+.btn-danger {
+  padding: 12px 20px !important;
+  background: #dc3545 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 25px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.btn-danger:hover {
+  background: #9a0614ff !important;
+}

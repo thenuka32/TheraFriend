@@ -71,24 +71,33 @@ document.getElementById('messageInput').addEventListener('keydown', function(e) 
 document.getElementById('sendButton').addEventListener('click', sendMessage);
 
 //Media Recorder API setup
-const record = document.getElementById('.record');
-const output = document.querySelector('.output');
+const record = document.querySelector(".record");
+const output = document.querySelector(".output");
 
-let mediaRecorder;
-let chunks = [];
-let stream;
+if (navigator.mediaDevices.getUserMedia) {
+    
+    let onMediaSetupSuccess = function (stream) {
+        const mediaRecorder = new MediaRecorder(stream);
+        let chunks = [];
 
-async function initializeRecorder() {
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        
-        mediaRecorder.ondataavailable = function(e) {
+        record.onclick = function() {
+            if (mediaRecorder.state == "recording") {
+                mediaRecorder.stop();
+                record.classList.remove("btn-danger");
+                record.classList.add("btn-primary");
+            } else {
+                mediaRecorder.start();
+                record.classList.remove("btn-primary");
+                record.classList.add("btn-danger");
+            }
+        }
+
+        mediaRecorder.ondataavailable = function (e) {
             chunks.push(e.data);
-        };
+        }
 
-        mediaRecorder.onstop = function() {
-            let blob = new Blob(chunks, { type: "audio/webm;" });
+        mediaRecorder.onstop = function () {
+            let blob = new Blob(chunks, {type: "audio/webm"});
             chunks = [];
 
             let formData = new FormData();
@@ -97,54 +106,19 @@ async function initializeRecorder() {
             fetch("/transcribe", {
                 method: "POST",
                 body: formData
-            })
-            .then((response) => response.json())
+            }).then((response) => response.json())
             .then((data) => {
-                if (data.transcript) {
-                    output.textContent = data.transcript;
-                } else if (data.error) {
-                    output.textContent = "Transcription failed: " + data.error;
-                } else {
-                    output.textContent = "No transcript received.";
-                }
+                output.innerHTML = data.output;
             })
-            .catch((err) => {
-                output.textContent = "Transcription failed.";
-                console.error(err);
-            });
-        };
-        
-        return true;
-    } catch (error) {
-        alert("Error accessing microphone: " + error.message);
-        return false;
-    }
-}
-
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    record.onclick = async function() {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-            record.classList.remove("btn-danger");
-            record.classList.add("btn-primary");
-            record.textContent = "Record";
-            
-            // Stop all tracks to release microphone
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        } else {
-            // Initialize new recorder for each recording session
-            const initialized = await initializeRecorder();
-            if (initialized) {
-                mediaRecorder.start();
-                record.classList.remove("btn-primary");
-                record.classList.add("btn-danger");
-                record.textContent = "Stop";
-            }
         }
-    };
+    }
+ 
+    let onMediaSetupFailure = function(err) {
+        alert(err);
+    }   
+
+    navigator.mediaDevices.getUserMedia({ audio: true}).then(onMediaSetupSuccess, onMediaSetupFailure);
+
 } else {
-    alert("getUserMedia is not supported in your browser");
+    alert("getUserMedia is not supported in your browser!")
 }
-document.getElementById('sendButton').addEventListener('click', sendMessage);

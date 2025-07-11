@@ -4,74 +4,55 @@ from dotenv import load_dotenv
 import os
 from openai import OpenAI
 import io
+from pathlib import Path
 
 # Load environment variables from .env
 load_dotenv()
 
-app = Flask(__name__, template_folder='templates')  # templates folder
-app.config.update(
-    SESSION_PERMANENT=False,
-    SESSION_TYPE="filesystem",
-)
+
+app = Flask(__name__, template_folder = 'templates')
+
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+
 app.secret_key = 'supersecretkey'
 
-# Initialize OpenAI client (new SDK style)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Load system prompt from file
 script_dir = os.path.dirname(os.path.abspath(__file__))
 prompt_path = os.path.join(script_dir, 'topic_prompts', 'initial_prompt.txt')
 with open(prompt_path, 'r', encoding='utf-8') as f:
     SYSTEM_PROMPT = f.read().strip()
 
+
 @app.route('/')
-def home():
+def chatbot_page():
     return render_template('chatBotpage.html')
 
-
-@app.route("/chat", methods=["POST"])
+@app.route('/chat', methods=['POST'])
 def chat():
-    data = request.get_json()
-    user_msg = data.get("message", "")
+    user_msg = request.json.get('message', '')
 
     history = session.get('conversation', [])
     history.append({"role": "user", "content": user_msg})
-    session['conversation'] = history
+
     try:
         resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history
         )
-        gpt_reply = resp.choices[0].message.content
-        return jsonify({"response": gpt_reply})
+        reply = resp.choices[0].message.content.strip()
     except Exception as e:
-        return jsonify({"response": "Sorry, I couldn't process your request.", "error": str(e)}), 500
+        app.logger.error(e)
+        reply = "Hmm, I’m having trouble responding right now — try again soon?"
 
-@app.route("/transcribe", methods=["POST"])
-def transcribe():
-    try:
-        if "audio" not in request.files:
-            return jsonify({"error": "No audio file provided"}), 400
 
-        file = request.files["audio"]
 
-        # Read file into buffer
-        buffer = io.BytesIO(file.read())
-        buffer.name = "audio.webm"  # OpenAI needs a filename
+    history.append({"role": "assistant", "content": reply})
+    session['conversation'] = history
+    return jsonify({'response': reply})
 
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=buffer,
-        )
-
-        # The transcript object has a 'text' attribute
-        return jsonify({"transcript": transcript.text})
-
-    except KeyError:
-        return jsonify({"error": "Audio file missing"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 @app.route('/tasks', methods=['POST'])
 def add_task():
     task = request.json.get('task', '').strip()
@@ -90,6 +71,30 @@ def get_tasks():
 def clear_tasks():
     session['tasks'] = []
     return jsonify({'status': 'cleared'})
+
+
+
+def create_app():
+    app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return render_template("chatBotpage.html")
+
+    @app.route("/transcribe", methods=["POST"])
+    def transcribe():
+        file = request.files["audio"]
+        buffer = io.BytesIO(file.read())
+        buffer.name = "audio.webm"
+
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=buffer
+        )
+
+        return jsonify({"transcript": transcript.text})
+
+    return app
 
 if __name__ == "__main__":
     app.run(debug=True)
