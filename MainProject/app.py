@@ -96,5 +96,24 @@ def create_app():
 
     return app
 
+@app.route('/notes')
+def notes_page():
+    return render_template('notes.html')
+
+@app.route('/add_prompt', methods=['POST'])
+def add_prompt():
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    if not text:
+        return jsonify({'message': 'No text provided.'}), 400
+
+    prompt_path = os.path.join(script_dir, 'topic_prompts', 'initial_prompt.txt')
+    try:
+        with open(prompt_path, 'a', encoding='utf-8') as f:
+            f.write('\n' + text)
+        return jsonify({'message': 'Text added to prompt file!'})
+    except Exception as e:
+        return jsonify({'message': f'Error: {str(e)}'}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
