@@ -1,67 +1,73 @@
 from flask import Flask, request, jsonify, render_template, session
 from flask_session import Session
 from dotenv import load_dotenv
-import os
 from openai import OpenAI
-import io
-from pathlib import Path
+import os, io
 
-# Load environment variables from .env
+
 load_dotenv()
 
 
-app = Flask(__name__, template_folder = 'templates')
-
+app = Flask(__name__, template_folder='templates')
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-
 app.secret_key = 'supersecretkey'
+
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-prompt_path = os.path.join(script_dir, 'topic_prompts', 'initial_prompt.txt')
-with open(prompt_path, 'r', encoding='utf-8') as f:
+
+with open(os.path.join(os.path.dirname(__file__), 'topic_prompts', 'initial_prompt.txt'), encoding='utf-8') as f:
     SYSTEM_PROMPT = f.read().strip()
+
 
 
 @app.route('/')
 def chatbot_page():
-    return render_template('chatBotpage.html')
+    return render_template("chatBotpage.html")
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_msg = request.json.get('message', '')
+    user_msg = request.json.get('message', '').strip()
+    if not user_msg:
+        return jsonify({'error': 'No message'}), 400
 
+    
     history = session.get('conversation', [])
     history.append({"role": "user", "content": user_msg})
 
     try:
-        resp = client.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history
         )
-        reply = resp.choices[0].message.content.strip()
+        bot_reply = response.choices[0].message.content.strip()
     except Exception as e:
-        app.logger.error(e)
-        reply = "Hmm, I’m having trouble responding right now — try again soon?"
+        app.logger.error(f"Chat error: {e}")
+        return jsonify({'error': 'Something went wrong while generating response.'})
 
-
-
-    history.append({"role": "assistant", "content": reply})
+    history.append({"role": "assistant", "content": bot_reply})
     session['conversation'] = history
-    return jsonify({'response': reply})
+
+    return jsonify({'response': bot_reply})
 
 @app.route('/tasks', methods=['POST'])
-def add_task():
-    task = request.json.get('task', '').strip()
-    if not task:
-        return jsonify({'error': 'No task provided'}), 400
+def add_tasks():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No task data'}), 400
+
+    new_tasks = data.get('tasks') or [data.get('task')]
+    if not new_tasks or not isinstance(new_tasks, list):
+        return jsonify({'error': 'Invalid task format'}), 400
+
+    
     tasks = session.get('tasks', [])
-    tasks.append(task)
+    tasks.extend([task.strip() for task in new_tasks if task.strip()])
     session['tasks'] = tasks
-    return jsonify({'status': 'added'})
+
+    return jsonify({'status': 'added', 'tasks': tasks})
 
 @app.route('/tasks', methods=['GET'])
 def get_tasks():
@@ -72,29 +78,24 @@ def clear_tasks():
     session['tasks'] = []
     return jsonify({'status': 'cleared'})
 
+@app.route('/transcribe', methods=['POST'])
+def transcribe():
+    file = request.files.get('audio')
+    if not file:
+        return jsonify({'error': 'No audio file'}), 400
 
+    buffer = io.BytesIO(file.read())
+    buffer.name = "audio.webm"
 
-def create_app():
-    app = Flask(__name__)
-
-    @app.route("/")
-    def index():
-        return render_template("chatBotpage.html")
-
-    @app.route("/transcribe", methods=["POST"])
-    def transcribe():
-        file = request.files["audio"]
-        buffer = io.BytesIO(file.read())
-        buffer.name = "audio.webm"
-
+    try:
         transcript = client.audio.transcriptions.create(
             model="whisper-1",
             file=buffer
         )
-
-        return jsonify({"transcript": transcript.text})
-
-    return app
+        return jsonify({"output": transcript.text})
+    except Exception as e:
+        app.logger.error(f"Transcription error: {e}")
+        return jsonify({"error": "Failed to transcribe audio."})
 
 @app.route('/notes')
 def notes_page():
