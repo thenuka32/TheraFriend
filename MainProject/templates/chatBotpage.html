@@ -13,31 +13,25 @@
       <div class="chat-messages" id="messages">
         <div class="bot">Bot: Hello! I’m here to listen. How are you feeling?</div>
       </div>
+      
       <div class="chat-input-container">
         <input id="messageInput" class="chat-input" type="text" placeholder="Type your message here…" />
         <button id="sendButton" class="send-button">Send</button>
         <button id="record" type="button" class="record-button">Record</button>
         <p class="output"></p>
+        <button class="btn btn-success ms-2" onclick="window.location.href='/notes'">
+  <i class="bi bi-journal-text"></i> Go to Notes
+</button>
+      <p class = "output"></p>
       </div>
 </head>
 <body>
 
   <div class="chat-container">
-    <div class="chat-header"><h2>TheraFriend AI</h2></div>
 
-    <div class="chat-messages" id="messages">
-      <div class="bot">Bot: Hello! I’m here to listen. How are you feeling?</div>
-    </div>
 
-    <div class="chat-input-container">
-      <input id="messageInput" class="chat-input" type="text" placeholder="Type your message here…" />
-      <button id="sendButton" class="send-button">Send</button>
-      <button id="record" type = "button"class="record btn btn-primary">Record</button>
-      <button class="btn btn-success ms-2" onclick="window.location.href='/notes'">
-  <i class="bi bi-journal-text"></i> Go to Notes
-</button>
-      <p class = "output"></p>
-    </div>
+
+
 
     <div class="goals-section">
       <div class="goals-header">Goals</div>
@@ -51,6 +45,8 @@
       <button class="clear-button" onclick="clearList()">Clear All</button>
     </div>
   </div>
+<div class="container">
+        
 
   <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
 </body>

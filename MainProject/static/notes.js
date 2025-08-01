@@ -22,15 +22,27 @@ let notes = {};
 
         function saveNote() {
             const noteText = document.getElementById('noteText').value;
-            
+            const noteDate = document.getElementById('noteDate').value;
+
+            fetch('/save_note', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: noteDate, note: noteText })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Optionally show a message
+                displayAllNotes();
+            });
+
+            // Update local notes object for UI
             if (noteText.trim() === '') {
-                if (notes[currentDate]) {
-                    delete notes[currentDate];
+                if (notes[noteDate]) {
+                    delete notes[noteDate];
                 }
             } else {
-                notes[currentDate] = noteText;
+                notes[noteDate] = noteText;
             }
-            
             displayAllNotes();
         }
 

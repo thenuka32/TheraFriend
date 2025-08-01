@@ -33,14 +33,21 @@ def chat():
     if not user_msg:
         return jsonify({'error': 'No message'}), 400
 
-    
     history = session.get('conversation', [])
     history.append({"role": "user", "content": user_msg})
+
+    # Get notes from session
+    notes = session.get('notes', {})
+    notes_text = "\n".join([f"{date}: {note}" for date, note in notes.items()])
+    notes_prompt = f"Here are the user's notes:\n{notes_text}\n" if notes_text else ""
+
+    # Add notes to system prompt
+    system_prompt = SYSTEM_PROMPT + "\n" + notes_prompt
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history
+            messages=[{"role": "system", "content": system_prompt}] + history
         )
         bot_reply = response.choices[0].message.content.strip()
     except Exception as e:
@@ -115,6 +122,22 @@ def add_prompt():
         return jsonify({'message': 'Text added to prompt file!'})
     except Exception as e:
         return jsonify({'message': f'Error: {str(e)}'}), 500
+
+@app.route('/save_note', methods=['POST'])
+def save_note():
+    data = request.get_json()
+    date = data.get('date')
+    note = data.get('note', '').strip()
+    if not date:
+        return jsonify({'message': 'No date provided.'}), 400
+
+    notes = session.get('notes', {})
+    if note:
+        notes[date] = note
+    else:
+        notes.pop(date, None)
+    session['notes'] = notes
+    return jsonify({'message': 'Note saved!', 'notes': notes})
 
 if __name__ == "__main__":
     app.run(debug=True)

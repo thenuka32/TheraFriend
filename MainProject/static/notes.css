@@ -3,20 +3,20 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #f5f5f5;
+    background-color: #181a1b !important;
+    color: #e0e0e0 !important;
 }
 
 .container {
-    background-color: white;
+    background-color: #23272b !important;
+    color: #e0e0e0 !important;
     padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7);
 }
 
-h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 30px;
+h1, h3, label {
+    color: #f1f1f1 !important;
 }
 
 .date-picker {
@@ -33,9 +33,11 @@ h1 {
 .date-picker input[type="date"] {
     width: 200px;
     padding: 10px;
-    border: 2px solid #ddd;
+    border: 2px solid #444 !important;
     border-radius: 5px;
     font-size: 16px;
+    background-color: #23272b !important;
+    color: #e0e0e0 !important;
 }
 
 .note-section {
@@ -46,18 +48,20 @@ h1 {
     width: 95%;
     min-height: 120px;
     padding: 15px;
-    border: 2px solid #ddd;
+    border: 2px solid #444 !important;
     border-radius: 5px;
     font-size: 16px;
     resize: none;
     margin-bottom: 10px;
     font-family: Arial, sans-serif;
     overflow: hidden;
+    background-color: #23272b !important;
+    color: #e0e0e0 !important;
 }
 
 button {
-    background-color: #1785de;
-    color: white;
+    background-color: #2563eb !important;
+    color: #fff !important;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -67,11 +71,28 @@ button {
 }
 
 button:hover {
-    background-color: #0f5a9e;
+    background-color: #1e40af !important;
+}
+
+.edit-btn {
+    background-color: #3b82f6 !important;
+    margin-right: 5px;
+}
+
+.edit-btn:hover {
+    background-color: #2563eb !important;
+}
+
+.delete-btn {
+    background-color: #ef4444 !important;
+}
+
+.delete-btn:hover {
+    background-color: #b91c1c !important;
 }
 
 .saved-notes {
-    border-top: 2px solid #eee;
+    border-top: 2px solid #333 !important;
     padding-top: 20px;
 }
 
@@ -81,16 +102,16 @@ button:hover {
 }
 
 .note-item {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    background-color: #222 !important;
+    border: 1px solid #333 !important;
+    color: #e0e0e0 !important;
     padding: 15px;
     margin-bottom: 10px;
 }
 
 .note-date {
     font-weight: bold;
-    color: #666;
+    color: #a0cfff !important;
     margin-bottom: 10px;
     font-size: 14px;
 }
@@ -99,28 +120,12 @@ button:hover {
     margin-bottom: 10px;
     line-height: 1.4;
     white-space: pre-wrap;
-}
-
-.edit-btn {
-    background-color: #2196F3;
-    margin-right: 5px;
-}
-
-.edit-btn:hover {
-    background-color: #1976D2;
-}
-
-.delete-btn {
-    background-color: #f44336;
-}
-
-.delete-btn:hover {
-    background-color: #d32f2f;
+    color: #e0e0e0 !important;
 }
 
 #notesList p {
     text-align: center;
-    color: #999;
+    color: #aaa !important;
     font-style: italic;
 }
 
