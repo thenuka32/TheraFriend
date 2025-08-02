@@ -104,9 +104,6 @@ def transcribe():
         app.logger.error(f"Transcription error: {e}")
         return jsonify({"error": "Failed to transcribe audio."})
 
-@app.route('/notes')
-def notes_page():
-    return render_template('notes.html')
 
 @app.route('/add_prompt', methods=['POST'])
 def add_prompt():
@@ -138,6 +135,9 @@ def save_note():
         notes.pop(date, None)
     session['notes'] = notes
     return jsonify({'message': 'Note saved!', 'notes': notes})
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

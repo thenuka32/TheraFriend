@@ -1,52 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TheraFriend AI Chat</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='chatBotpage.css') }}" />
-</head>
-<body>
-  <div class="main-layout">
-    <div class="chat-section">
-      <div class="chat-header">TheraFriend AI</div>
-      <div class="chat-messages" id="messages">
-        <div class="bot">Bot: Hello! I’m here to listen. How are you feeling?</div>
-      </div>
-      
-      <div class="chat-input-container">
-        <input id="messageInput" class="chat-input" type="text" placeholder="Type your message here…" />
-        <button id="sendButton" class="send-button">Send</button>
-        <button id="record" type="button" class="record-button">Record</button>
-        <p class="output"></p>
-        <button class="btn btn-success ms-2" onclick="window.location.href='/notes'">
-  <i class="bi bi-journal-text"></i> Go to Notes
-</button>
-      <p class = "output"></p>
-      </div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TheraFriend AI Chat & Notes</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='chatBotpage.css') }}" />
 </head>
 <body>
 
-  <div class="chat-container">
-
-
-
-
-
-    <div class="goals-section">
-      <div class="goals-header">Goals</div>
-      <div class="goals-progress">
-        <progress id="goalProgress" value="0" max="100"></progress>
-        <span id="progressLabel">0% Complete</span>
-      </div>
-      <ul id="goalsList" class="goals-list">
-        
-      </ul>
-      <button class="clear-button" onclick="clearList()">Clear All</button>
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-container">
+            <button class="close-btn" id="closeBtn">&times;</button>
+            <div class="popup-content">
+                <h2>DISCLAIMER</h2>
+                <p>TheraFriend AI is not a replacement for therapy, rather it is a companion to assist with mental health</p>
+            </div>
+        </div>
     </div>
-  </div>
-<div class="container">
+    <div class="main-layout">
+        <div class="chat-section">
+            
+            <div class="chat-header">TheraFriend AI</div>
+            <div class="chat-messages" id="messages">
+                <div class="message bot">Hello! I'm here to listen. How are you feeling?</div>
+            </div>
+           
+            <div class="chat-input-container">
+                <input id="messageInput" class="chat-input" type="text" placeholder="Type your message here…" />
+                <button id="sendButton" class="send-button">Send</button>
+                <button id="recordButton" class="record-button">Record</button>
+                <p class="output" id="output"></p>
+            </div>
+        </div>
         
+        <div class="goals-section">
+            <div class="goals-header">Goals</div>
+            <div class="goals-progress">
+                <progress id="goalProgress" value="0" max="100"></progress>
+                <span id="progressLabel">0% Complete</span>
+            </div>
+            <ul id="goalsList" class="goals-list">
+                <!-- Goals will be dynamically added here -->
+            </ul>
+            <button class="clear-button" onclick="clearGoals()">Clear All</button>
+        </div>
+        <div class="notes-container">
+            <h1>Daily Notes</h1>
+            <div class="date-picker">
+                <label for="noteDate">Select Date:</label>
+                <input type="date" id="noteDate" onchange="loadNoteForDate()">
+            </div>
+            <div class="note-section">
+                <textarea id="noteText" placeholder="Write your note for this day..."></textarea>
+                <button onclick="saveNote()">Save Note</button>
+            </div>
+            <div class="saved-notes">
+                <h3>All Notes</h3>
+                <div id="notesList"></div>
+            </div>
+        </div>
+    </div>
+    </div>
 
   <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
 </body>

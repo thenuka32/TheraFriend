@@ -7,7 +7,6 @@ function appendMessage(sender, text) {
     messages.scrollTop = messages.scrollHeight;
 }
 
-
 function renderGoals(list) {
     const goalsList = document.getElementById('goalsList');
     goalsList.innerHTML = '';
@@ -39,7 +38,6 @@ function updateProgress() {
     document.getElementById('goalProgress').value = percent;
     document.getElementById('progressLabel').innerText = `${percent}% Complete`;
 }
-
 
 function extractStepsFromBotResponse(text) {
     const steps = [];
@@ -113,14 +111,14 @@ function sendMessage() {
     });
 }
 
-
+// Event listeners for chat functionality
 document.getElementById('messageInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') sendMessage();
 });
 document.getElementById('sendButton').addEventListener('click', sendMessage);
 document.querySelector('.clear-button').addEventListener('click', clearList);
 
-
+// Voice recording functionality
 const record = document.querySelector(".record");
 if (record && navigator.mediaDevices?.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
@@ -159,150 +157,271 @@ if (record && navigator.mediaDevices?.getUserMedia) {
 }
 
 refreshGoals();
-        
-        let notes = {};
-        let currentDate = '';
 
-        // Set today's date on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('noteDate').value = today;
-            loadNoteForDate();
-            displayAllNotes();
+// Notes functionality
+let notes = {};
+let currentDate = '';
+
+// Set today's date on load
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('noteDate').value = today;
+    loadNoteForDate();
+    displayAllNotes();
+});
+
+function loadNoteForDate() {
+    currentDate = document.getElementById('noteDate').value;
+    const noteText = document.getElementById('noteText');
+   
+    if (notes[currentDate]) {
+        noteText.value = notes[currentDate];
+    } else {
+        noteText.value = '';
+    }
+}
+
+function saveNote() {
+    const noteText = document.getElementById('noteText').value;
+   
+    if (noteText.trim() === '') {
+        if (notes[currentDate]) {
+            delete notes[currentDate];
+        }
+    } else {
+        notes[currentDate] = noteText;
+    }
+   
+    displayAllNotes();
+}
+
+function saveToFile() {
+    // Check if there are any notes to save
+    if (Object.keys(notes).length === 0) {
+        alert('No notes to save!');
+        return;
+    }
+    
+    // Sort dates chronologically
+    const sortedDates = Object.keys(notes).sort();
+    
+    // Create the text content
+    let content = '';
+    sortedDates.forEach(date => {
+        const dateObj = new Date(date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
         
-        function loadNoteForDate() {
-            currentDate = document.getElementById('noteDate').value;
-            const noteText = document.getElementById('noteText');
-           
-            if (notes[currentDate]) {
-                noteText.value = notes[currentDate];
-            } else {
-                noteText.value = '';
-            }
+        content += `${formattedDate}\n`;
+        content += `${'='.repeat(formattedDate.length)}\n`;
+        content += `${notes[date]}\n\n`;
+    });
+    
+    // Create blob and download
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "initial_prompt.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function displayAllNotes() {
+    const notesList = document.getElementById('notesList');
+    notesList.innerHTML = '';
+    const sortedDates = Object.keys(notes).sort().reverse();
+   
+    if (sortedDates.length === 0) {
+        notesList.innerHTML = '<p>No notes yet. Select a date and start writing!</p>';
+        return;
+    }
+    
+    sortedDates.forEach(date => {
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'note-item';
+       
+        const dateObj = new Date(date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+       
+        noteDiv.innerHTML = `
+            <div class="note-date">${formattedDate}</div>
+            <div class="note-content">${notes[date]}</div>
+            <button class="edit-btn" onclick="editNote('${date}')">Edit</button>
+            <button class="delete-btn" onclick="deleteNote('${date}')">Delete</button>
+        `;
+       
+        notesList.appendChild(noteDiv);
+    });
+}
+
+function editNote(date) {
+    document.getElementById('noteDate').value = date;
+    loadNoteForDate();
+}
+
+function deleteNote(date) {
+    if (confirm('Are you sure you want to delete this note?')) {
+        delete notes[date];
+        displayAllNotes();
+       
+        // Clear textarea if we're currently viewing the deleted note
+        if (currentDate === date) {
+            document.getElementById('noteText').value = '';
         }
+    }
+}
+
+function submitPrompt() {
+    const input = document.getElementById('promptInput').value.trim();
+    const status = document.getElementById('promptStatus');
+    if (!input) {
+        status.textContent = "Please enter some text.";
+        return;
+    }
+    fetch('/add_prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: input })
+    })
+    .then(res => res.json())
+    .then(data => {
+        status.textContent = data.message;
+        document.getElementById('promptInput').value = '';
+    })
+    .catch(() => {
+        status.textContent = "Failed to add to prompt file.";
+    });
+}
+
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendMessage('user', text);
+    input.value = '';
+
+    fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+    })
+    .then(r => r.json())
+    .then(d => {
+        appendMessage('bot', d.response || d.error);
+
+        const steps = extractStepsFromBotResponse(d.response || '');
+        addStepsToGoals(steps);
         
-        function saveNote() {
-            const noteText = document.getElementById('noteText').value;
-           
-            if (noteText.trim() === '') {
-                if (notes[currentDate]) {
-                    delete notes[currentDate];
-                }
-            } else {
-                notes[currentDate] = noteText;
-            }
-           
+        // Refresh notes display if notes were saved
+        if (d.notes_saved && d.notes_saved > 0) {
             displayAllNotes();
         }
-        
-        function saveToFile() {
-            // Check if there are any notes to save
-            if (Object.keys(notes).length === 0) {
-                alert('No notes to save!');
-                return;
-            }
-            
-            // Sort dates chronologically
-            const sortedDates = Object.keys(notes).sort();
-            
-            // Create the text content
-            let content = '';
-            sortedDates.forEach(date => {
-                const dateObj = new Date(date);
-                const formattedDate = dateObj.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                content += `${formattedDate}\n`;
-                content += `${'='.repeat(formattedDate.length)}\n`;
-                content += `${notes[date]}\n\n`;
-            });
-            
-            // Create blob and download
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "initial_prompt.txt";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-        
-        function displayAllNotes() {
-            const notesList = document.getElementById('notesList');
-            notesList.innerHTML = '';
-            const sortedDates = Object.keys(notes).sort().reverse();
-           
-            if (sortedDates.length === 0) {
-                notesList.innerHTML = '<p>No notes yet. Select a date and start writing!</p>';
-                return;
-            }
-            
-            sortedDates.forEach(date => {
-                const noteDiv = document.createElement('div');
-                noteDiv.className = 'note-item';
-               
-                const dateObj = new Date(date);
-                const formattedDate = dateObj.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-               
-                noteDiv.innerHTML = `
-                    <div class="note-date">${formattedDate}</div>
-                    <div class="note-content">${notes[date]}</div>
-                    <button class="edit-btn" onclick="editNote('${date}')">Edit</button>
-                    <button class="delete-btn" onclick="deleteNote('${date}')">Delete</button>
-                `;
-               
-                notesList.appendChild(noteDiv);
-            });
-        }
-        
-        function editNote(date) {
-            document.getElementById('noteDate').value = date;
+    })
+    .catch(e => {
+        console.error(e);
+        appendMessage('bot', 'Sorry — something went wrong on my side.');
+    });
+}
+
+function loadNotesFromServer() {
+    fetch('/notes')
+        .then(r => r.json())
+        .then(serverNotes => {
+            notes = serverNotes;
+            displayAllNotes();
             loadNoteForDate();
-        }
-        
-        function deleteNote(date) {
-            if (confirm('Are you sure you want to delete this note?')) {
-                delete notes[date];
-                displayAllNotes();
-               
-                // Clear textarea if we're currently viewing the deleted note
-                if (currentDate === date) {
-                    document.getElementById('noteText').value = '';
-                }
+        })
+        .catch(e => console.error('Failed to load notes:', e));
+}
+
+function initializeNotes() {
+    // Set today's date on load
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('noteDate').value = today;
+    loadNotesFromServer();  // Load from server instead of just local
+    loadNoteForDate();
+    displayAllNotes();
+}
+
+function saveNote() {
+    const noteText = document.getElementById('noteText').value;
+    const date = document.getElementById('noteDate').value;
+   
+    // Save to server
+    fetch('/save_note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: date, note: noteText })
+    })
+    .then(r => r.json())
+    .then(data => {
+        notes = data.notes;
+        displayAllNotes();
+    })
+    .catch(e => console.error('Failed to save note:', e));
+}
+
+function deleteNote(date) {
+    if (confirm('Are you sure you want to delete this note?')) {
+        // Delete from server
+        fetch('/save_note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: date, note: '' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            notes = data.notes;
+            displayAllNotes();
+           
+            // Clear textarea if we're currently viewing the deleted note
+            if (currentDate === date) {
+                document.getElementById('noteText').value = '';
             }
-            
+        })
+        .catch(e => console.error('Failed to delete note:', e));
+    }
+}
+
+const popupOverlay = document.getElementById('popupOverlay');
+        const closeBtn = document.getElementById('closeBtn');
+
+        // Function to hide popup
+        function hidePopup() {
+            popupOverlay.classList.add('hidden');
         }
-        
-        function submitPrompt() {
-            const input = document.getElementById('promptInput').value.trim();
-            const status = document.getElementById('promptStatus');
-            if (!input) {
-                status.textContent = "Please enter some text.";
-                return;
+
+        // Function to show popup
+        function showPopup() {
+            popupOverlay.classList.remove('hidden');
+        }
+
+        // Close popup when close button is clicked
+        closeBtn.addEventListener('click', hidePopup);
+
+        // Close popup when clicking outside the image
+        popupOverlay.addEventListener('click', function(e) {
+            if (e.target === popupOverlay) {
+                hidePopup();
             }
-            fetch('/add_prompt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: input })
-            })
-            .then(res => res.json())
-            .then(data => {
-                status.textContent = data.message;
-                document.getElementById('promptInput').value = '';
-            })
-            .catch(() => {
-                status.textContent = "Failed to add to prompt file.";
-            });
-        }
+        });
+
+        // Close popup with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !popupOverlay.classList.contains('hidden')) {
+                hidePopup();
+            }
+        });
